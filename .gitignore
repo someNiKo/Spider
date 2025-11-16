@@ -1,0 +1,122 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pyd
+*.so
+
+# Virtual envs
+.venv/
+.venv*/
+venv/
+env/
+env*/
+.ENV/
+pip-wheel-metadata/
+pip-log.txt
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+wheelhouse/
+*.whl
+
+# Test / coverage
+htmlcov/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.tox/
+.nox/
+mypy_cache/
+.pyre/
+coverage.xml
+nosetests.xml
+
+# IDEs / editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+Icon?
+$RECYCLE.BIN/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Logs / runtime
+*.log
+logs/
+*.pid
+*.seed
+
+# Secrets / env
+.env
+.env.local
+.env.*.local
+secret_*.json
+credentials.json
+*.pem
+*.key
+
+# PyInstaller
+*.spec
+build/
+dist/
+
+# C extensions / compiled objects
+*.o
+*.obj
+*.elf
+*.map
+*.axf
+*.bin
+*.hex
+*.out
+*.lib
+*.a
+
+# STM32 / MCU IDE artifacts (Keil, CubeIDE, IAR, Make builds)
+*.uvprojx
+*.uvoptx
+*.ioc
+*.gdb
+*.elf
+/Debug/
+/Release/
+/build_stm32/
+/*.axf
+/*.map
+/*.lst
+
+# Webots / controller tmp
+*.wbt~ 
+*.log
+*.tmp
+
+# Node / frontend (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+*.tmp
+*.swp
+*.bak
+*.old
+
+# Local git ignore (user-specific local exclusions)
+# You can also use .git/info/exclude for machine-specific ignores.
