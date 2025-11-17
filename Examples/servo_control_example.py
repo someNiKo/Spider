@@ -1,4 +1,7 @@
 """
+It is recommended to use an angular transmission frequency of 400Hz.
+
+examples:
 mode 0: moving a single joint to specific angle with specific name
 mode 1: testing all joint in sine wave
 mode 2: testing a single joint with specific name in sine wave

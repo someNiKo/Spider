@@ -9,7 +9,7 @@ BAUD = 460800
 
 # ==== control config ====
 
-CONTROL_FREQUENCE = 150
+CONTROL_FREQUENCE = 200
 
 SEND_ORDER = [
     "L1_coxa", "L1_femur", "L1_tibia",
