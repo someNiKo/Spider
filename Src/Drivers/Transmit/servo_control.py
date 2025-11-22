@@ -10,6 +10,14 @@ Protocol:
   [6..41] angles[18] (each uint16, unit=0.1°; e.g. 900 == 90.0°)
   [42..43] CRC16-IBM (le, poly=0xA001, init=0xFFFF) over bytes [3..41] (CMD..angles)
 """
+import sys
+from pathlib import Path
+
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[3] 
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 
 import time
 import math

@@ -1,0 +1,6 @@
+rich==14.22.0
+textual==6.6.0
+matplotlib==3.10.0
+pyserial==3.5
+numpy==2.2.0
+pyzmq==27.1.0
