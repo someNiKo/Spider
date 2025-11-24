@@ -60,8 +60,8 @@ if __name__ == "__main__":
 
     try:
         #mode0("L1_femur", 120.0, servo)
-        #mode1(amp=50.0, freq=0.2, base=90.0, send_hz=400.0)
-        mode2(joint_name="L1_coxa", amp=50.0, freq=0.2, base=90.0, send_hz=400.0)
+        mode1(amp=50.0, freq=0.2, base=90.0, send_hz=400.0)
+        #mode2(joint_name="L1_coxa", amp=50.0, freq=0.2, base=90.0, send_hz=400.0)
     except KeyboardInterrupt:
         servo.reset_joint_angle()
 

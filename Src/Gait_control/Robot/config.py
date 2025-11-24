@@ -3,10 +3,10 @@ COXA_LENGTH = 30.1
 FEMUR_LENGTH = 60.91
 TIBIA_LENGTH = 152.32
 
-LINK_GROUND_LENGTH = 35.94
+LINK_GROUND_LENGTH = 35.49
 LINK_CRANK_LENGTH = 22.36        # Input link
-LINK_COUPLER_LENGTH = 24.0       # Connection link
-LINK_ROCKER_LENGTH = 27.0       # Output link
+LINK_COUPLER_LENGTH = 32.0       # Connection link
+LINK_ROCKER_LENGTH = 24.0       # Output link
 
 
 # unit: degree

@@ -11,6 +11,7 @@ import numpy as np
 from typing import List
 from Src.Gait_control.Robot import config as cfg
 import threading
+import warnings
 
 class Spider_robot:
     def __init__(self):
@@ -25,18 +26,78 @@ class Spider_robot:
         pass
 
     def write_all_ends_coordinate(self, ends_coordinate: dict):
+        '''
+        param shoud be:
+        ends_coordinate = {
+            "L1": [xxx, xxx, xxx], 
+            "L2": [xxx, xxx, xxx],
+            ......
+        }
+        '''
+        try:
+            self.legs["L1"].write_end_coordinate(ends_coordinate["L1"])
+            self.legs["L2"].write_end_coordinate(ends_coordinate["L2"])
+            self.legs["L3"].write_end_coordinate(ends_coordinate["L3"])
+            self.legs["L4"].write_end_coordinate(ends_coordinate["L4"])
+            self.legs["L5"].write_end_coordinate(ends_coordinate["L5"])
+            self.legs["L6"].write_end_coordinate(ends_coordinate["L6"])
+        except Exception:
+            pass
         pass
 
     def read_all_ends_coordinate(self) -> dict:
-        pass
+        try:
+            ends_coordinate = {
+                "L1": self.legs["L1"].read_end_coordinate(),
+                "L2": self.legs["L2"].read_end_coordinate(),
+                "L3": self.legs["L3"].read_end_coordinate(),
+                "L4": self.legs["L4"].read_end_coordinate(),
+                "L5": self.legs["L5"].read_end_coordinate(),
+                "L6": self.legs["L6"].read_end_coordinate(),
+            }
+            return ends_coordinate 
+        except Exception:
+            pass           
 
-    def write_all_joints_angle(self):
+    def _write_all_joints_angle(self):
         pass
     
-    def read_all_joints_angle(self) -> dict:
-        pass
+    def read_all_joints_angle(self) -> dict:        
+        """
+        return:
+        { "L1_coxa": ..., "L1_femur": ..., "L1_tibia": ..., "R3_tibia": ... }
+        """
+        all_joint_angle = {}
+        try:
+            for name, leg in self.legs.items():
+                try:
+                    joint_dict = leg.read_all_joints_angle()
+                    if isinstance(joint_dict, dict):
+                        for joint_name, angle in joint_dict.items():
+                            all_joint_angle[f"{name}_{joint_name}"] = angle
+                except Exception:
+                    continue
+            return all_joint_angle
+        except Exception:
+            return {}
 
-
+    def read_servo_outputs(self) -> dict:
+        """
+        return:
+        { "L1_coxa": val, "L1_femur": val, ... }
+        """
+        outputs = {}
+        try:
+            for name, leg in self.legs.items():
+                try:
+                    so = leg.read_servo_output()
+                    if isinstance(so, dict):
+                        outputs.update(so)
+                except Exception:
+                    continue
+            return outputs
+        except Exception:
+            return {}
 
     def publish_joints_angle(self):
         pass
@@ -76,7 +137,7 @@ class Leg:
         else:
             raise Exception
         
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
         self.Coxa_length = Coxa_length
         self.Femur_length = Femur_length
@@ -112,6 +173,7 @@ class Leg:
         self.calculate_servo_output_limitation()      
 
         self.__end_coordinate = self.forward_kinematic()
+        self.write_end_coordinate(self.__end_coordinate)
 
 
 
@@ -133,13 +195,22 @@ class Leg:
             #print(self.__joint)
             return self.__joint
 
+    def read_servo_output(self) -> dict:
+        with self._lock:
+            #print(self.__servo_output)
+            return self.__servo_output
+    
     def write_end_coordinate(self, end_coordinate: List[float]):
         # update all data
-        # conduct safty check!!!
+        # conduct safty check in servo_output_convert()
         with self._lock:
             self.__end_coordinate = end_coordinate
-            self.__joint["coxa"], self.__joint["femur"], self.__joint["tibia"] = self.inverse_kinematic()
-            self.__servo_output[self.name + "_coxa"], self.__servo_output[self.name + "_femur"], self.__servo_output[self.name + "_tibia"] = self.servo_output_convert()
+            try:
+                self.__joint["coxa"], self.__joint["femur"], self.__joint["tibia"] = self.inverse_kinematic()
+                self.__servo_output[self.name + "_coxa"], self.__servo_output[self.name + "_femur"], self.__servo_output[self.name + "_tibia"] = self.servo_output_convert()
+            except Exception as e:
+                print("e")
+                exit(1)
 
     def _write_joint_angle(self, name: str, angle: float):
         pass
@@ -159,7 +230,7 @@ class Leg:
         Distance = np.hypot(r, z)       # Distance from end_coordinate to Femur joint
         
         if Distance > self.Femur_length + self.Tibia_length or Distance < np.abs(self.Femur_length - self.Tibia_length):
-            print(" ")
+            raise Exception(f"{self.name} target coordinate has no inverse kinematic solution.")
         
         alpha = np.arctan2(r, -z)
         beta = np.arccos( (Distance**2 + self.Femur_length**2 - self.Tibia_length**2) / (2*Distance*self.Femur_length) )
@@ -184,7 +255,37 @@ class Leg:
         '''
         check servo output limitation 
         '''
-        pass
+        
+        if self.side == "left":
+            coxa_servo_output = self.read_joint_angle("coxa")
+            femur_servo_output = self.read_joint_angle("femur")
+            tibia_servo_output = self.link_kinematic()
+        elif self.side == "right":
+            coxa_servo_output = self.read_joint_angle("coxa")
+            femur_servo_output = 180.0 - self.read_joint_angle("femur")
+            tibia_servo_output = self.link_kinematic()
+        else:
+            pass
+
+        ALLOWABLE_WARNING = 2.0
+        
+        # check angular limitation, raise error if exceed the limit, raise warning if close to the limit(2°)
+        if not (self.__servo_output_limitation["min_coxa"] <= coxa_servo_output <= self.__servo_output_limitation["max_coxa"]):
+            raise Exception(f"{self.name} coxa servo output exceed limitation!")
+        elif not (self.__servo_output_limitation["min_coxa"] + ALLOWABLE_WARNING <= coxa_servo_output <= self.__servo_output_limitation["max_coxa"] - ALLOWABLE_WARNING):
+            warnings.warn(f"{self.name} coxa servo output close to limitation!", UserWarning)
+
+        if not (self.__servo_output_limitation["min_femur"] <= femur_servo_output <= self.__servo_output_limitation["max_femur"]):
+            raise Exception(f"{self.name} femur servo output exceed limitation!")
+        elif not (self.__servo_output_limitation["min_femur"] + ALLOWABLE_WARNING <= femur_servo_output <= self.__servo_output_limitation["max_femur"] - ALLOWABLE_WARNING):
+            warnings.warn(f"{self.name} femur servo output close to limitation!", UserWarning)
+        
+        if not (self.__servo_output_limitation["min_tibia"] <= tibia_servo_output <= self.__servo_output_limitation["max_tibia"]):
+            raise Exception(f"{self.name} tibia servo output exceed limitation!")
+        elif not (self.__servo_output_limitation["min_tibia"] + ALLOWABLE_WARNING <= tibia_servo_output <= self.__servo_output_limitation["max_tibia"] - ALLOWABLE_WARNING):
+            warnings.warn(f"{self.name} tibia servo output close to limitation!", UserWarning)
+
+        return coxa_servo_output, femur_servo_output, tibia_servo_output
 
     def calculate_coxa_servo_output_offset(self) -> float:
         # unit degree
@@ -198,21 +299,22 @@ class Leg:
         compare with default angular limitation
         '''
         # tibia limitation
-        if self.side == "left":
-            phi_0 = self.coxa_servo_output_offset       # degree
-            max_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_rocker_length + self.Link_coupler_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) + phi_0
-            min_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) + phi_0
-            self.__servo_output_limitation["max_coxa"] = min(self.__servo_output_limitation["max_coxa"], max_theta_s)
-            self.__servo_output_limitation["min_coxa"] = max(self.__servo_output_limitation["min_coxa"], min_theta_s)
+        with self._lock:
+            if self.side == "left":
+                phi_0 = self.coxa_servo_output_offset       # degree
+                max_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_rocker_length + self.Link_coupler_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) + phi_0
+                min_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) + phi_0
+                self.__servo_output_limitation["max_coxa"] = min(self.__servo_output_limitation["max_coxa"], max_theta_s)
+                self.__servo_output_limitation["min_coxa"] = max(self.__servo_output_limitation["min_coxa"], min_theta_s)
 
-        elif self.side == "right":
-            phi_0 = self.coxa_servo_output_offset       # degree
-            max_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) - phi_0
-            min_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_coupler_length + self.Link_rocker_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) - phi_0
-            self.__servo_output_limitation["max_coxa"] = min(self.__servo_output_limitation["max_coxa"], max_theta_s)
-            self.__servo_output_limitation["min_coxa"] = max(self.__servo_output_limitation["min_coxa"], min_theta_s)
-        else:
-            pass
+            elif self.side == "right":
+                phi_0 = self.coxa_servo_output_offset       # degree
+                max_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) - phi_0
+                min_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_coupler_length + self.Link_rocker_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) - phi_0
+                self.__servo_output_limitation["max_coxa"] = min(self.__servo_output_limitation["max_coxa"], max_theta_s)
+                self.__servo_output_limitation["min_coxa"] = max(self.__servo_output_limitation["min_coxa"], min_theta_s)
+            else:
+                pass
 
     def link_kinematic(self) -> float:
         # input unit: degree
@@ -238,5 +340,11 @@ if __name__ == "__main__":
     robot = Spider_robot()
     leg = robot.legs["L1"]
     #angle = leg.inverse_kinematic()
+    
     while True:
+        end_coordinate = [10.0, 91.0, -152.0]
+        leg.write_end_coordinate(end_coordinate)
+        #print(leg.read_all_joints_angle())
+        print(leg.read_servo_output())
+
         pass

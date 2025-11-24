@@ -23,7 +23,7 @@ import time
 import math
 import struct
 import serial
-from . import config as cfg
+from Src.Drivers.Transmit import config as cfg
 import threading
 import queue
 
@@ -46,7 +46,7 @@ class servo:
         self.send_order = send_order
         self.DEFAULT_JOINT_ANGLE = default_joint_angle
         self.__joint_angle = default_joint_angle
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._q = queue.Queue(maxsize=1)
         self._stop = threading.Event()
         self._thread = None
@@ -79,7 +79,6 @@ class servo:
                 self.__joint_angle[k] = ang
             snapshot = dict(self.__joint_angle)
 
-        # 非阻塞地把最新快照放入单槽队列（覆盖旧帧）
         try:
             self._q.put_nowait(snapshot)
         except queue.Full:
