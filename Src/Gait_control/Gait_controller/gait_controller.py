@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 
 from Src.Gait_control.Robot.robot_geometry_model import Spider_robot
 from Src.Gait_control.Tripod_gait.tripod_gait import TripodGait
+from Src.DDS.publisher import Publisher
 
 
 class GaitController:
@@ -33,10 +34,9 @@ class GaitController:
 
         self._stop_event = threading.Event()
         self._loop_thread: Optional[threading.Thread] = None
-        self._sequence = 0
-        self._ctx = None
-        self._pub = None
-        self._zmq = None
+        self._publisher: Optional[Publisher] = None
+        self._positions = {}
+        self._phases = []
 
     def start(self) -> None:
         if self._loop_thread and self._loop_thread.is_alive():
@@ -54,8 +54,9 @@ class GaitController:
         self._close_publisher()
 
     def step(self, time_s: float, publish: bool = True) -> Dict[str, float]:
-        positions = self.gait.sample(time_s)
-        self._apply_positions(positions)
+        self._positions = self.gait.sample(time_s)
+        self._phases = self.gait.phases()
+        self._apply_positions(self._positions)
         servo_outputs = self.robot.read_servo_outputs() or {}
         if publish:
             self._publish(time_s, servo_outputs)
@@ -65,35 +66,32 @@ class GaitController:
         self.stop()
 
     def _ensure_publisher(self) -> None:
-        if not self.pub_bind or self._pub is not None:
+        if not self.pub_bind or self._publisher is not None:
             return
         try:
-            import zmq
+            self._publisher = Publisher(
+                bind=self.pub_bind,
+                topic="servo.angles",
+                publish_hz=self.control_hz,
+                warmup=self.publisher_warmup,
+                add_meta=True,
+            )
+            self._publisher.start()
         except ImportError:
             print("[GaitController] pyzmq not installed, disabling broadcast")
             self.pub_bind = None
-            return
-        self._zmq = zmq
-        self._ctx = zmq.Context()
-        self._pub = self._ctx.socket(zmq.PUB)
-        self._pub.bind(self.pub_bind)
-        if self.publisher_warmup > 0:
-            time.sleep(self.publisher_warmup)
+            self._publisher = None
+        except Exception as exc:
+            print(f"[GaitController] failed to start publisher: {exc}")
+            self._publisher = None
 
     def _close_publisher(self) -> None:
-        if self._pub is not None:
+        if self._publisher is not None:
             try:
-                self._pub.close(0)
+                self._publisher.stop()
             except Exception:
                 pass
-            self._pub = None
-        if self._ctx is not None:
-            try:
-                self._ctx.term()
-            except Exception:
-                pass
-            self._ctx = None
-        self._zmq = None
+            self._publisher = None
 
     def _run_loop(self) -> None:
         base_time = time.perf_counter()
@@ -123,12 +121,11 @@ class GaitController:
                 print(f"[GaitController] failed to update {leg_name}: {exc}")
 
     def _publish(self, time_s: float, servo_outputs: Dict[str, float]) -> None:
-        if self._pub is None:
+        if self._publisher is None:
             return
-        payload = {"seq": self._sequence, "t": time_s, "angles": servo_outputs}
+        payload = {"angles": servo_outputs, "time": time_s, "positions": self._positions, "phases": self._phases}
         try:
-            self._pub.send_json(payload)
-            self._sequence += 1
+            self._publisher.publish_once(payload)
         except Exception as exc:
             print(f"[GaitController] publish failed: {exc}")
 

@@ -44,12 +44,25 @@
 
 ![](attachments/P4.png)
 
-#### Brief summary
+### Brief summary
 
 add human readable angle
 
 "some table here"
 
+# Forward kinematic
 
+![](attachments/P5.png)
 
+For the end point $E(x,\;y,\;z)$
+
+$$
+\begin{aligned}
+r &= Femur\sin{\theta_2} + Tibia\sin{\theta_3} \\
+R &= r + Coxa \\
+x &= R\cos{\theta_1}\\
+y &= R\sin{\theta_1}\\
+z &= Femur\cos{\theta_2} - Tibia\cos{\theta_3}
+\end{aligned}
+$$
 

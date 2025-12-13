@@ -4,9 +4,9 @@ FEMUR_LENGTH = 60.91
 TIBIA_LENGTH = 152.32
 
 LINK_GROUND_LENGTH = 35.49
-LINK_CRANK_LENGTH = 22.36        # Input link
-LINK_COUPLER_LENGTH = 32.0       # Connection link
-LINK_ROCKER_LENGTH = 24.0       # Output link
+LINK_CRANK_LENGTH = 16.07        # Input link
+LINK_COUPLER_LENGTH = 35.0       # Connection link
+LINK_ROCKER_LENGTH = 20.0       # Output link
 
 
 # unit: degree
@@ -22,6 +22,6 @@ MAX_COXA_SERVO_OUTPUT = {"left": 180.0, "right": 180.0}          # 通过试验�
 MIN_COXA_SERVO_OUTPUT = {"left": 0.0, "right": 0.0}
 MAX_FEMUR_SERVO_OUTPUT = {"left": 180.0, "right": 180.0}          
 MIN_FEMUR_SERVO_OUTPUT = {"left": 0.0, "right": 0.0}
-MAX_TIBIA_SERVO_OUTPUT = {"left": 180.0, "right": 180.0}         #用自身的值比较舵机的极限位置
+MAX_TIBIA_SERVO_OUTPUT = {"left": 180.0, "right": 180.0}         
 MIN_TIBIA_SERVO_OUTPUT = {"left": 0.0, "right": 0.0}
 

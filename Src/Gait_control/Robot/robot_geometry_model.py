@@ -38,9 +38,9 @@ class Spider_robot:
             self.legs["L1"].write_end_coordinate(ends_coordinate["L1"])
             self.legs["L2"].write_end_coordinate(ends_coordinate["L2"])
             self.legs["L3"].write_end_coordinate(ends_coordinate["L3"])
-            self.legs["L4"].write_end_coordinate(ends_coordinate["L4"])
-            self.legs["L5"].write_end_coordinate(ends_coordinate["L5"])
-            self.legs["L6"].write_end_coordinate(ends_coordinate["L6"])
+            self.legs["R1"].write_end_coordinate(ends_coordinate["R1"])
+            self.legs["R2"].write_end_coordinate(ends_coordinate["R2"])
+            self.legs["R3"].write_end_coordinate(ends_coordinate["R3"])
         except Exception:
             pass
         pass
@@ -51,9 +51,9 @@ class Spider_robot:
                 "L1": self.legs["L1"].read_end_coordinate(),
                 "L2": self.legs["L2"].read_end_coordinate(),
                 "L3": self.legs["L3"].read_end_coordinate(),
-                "L4": self.legs["L4"].read_end_coordinate(),
-                "L5": self.legs["L5"].read_end_coordinate(),
-                "L6": self.legs["L6"].read_end_coordinate(),
+                "R1": self.legs["R1"].read_end_coordinate(),
+                "R2": self.legs["R2"].read_end_coordinate(),
+                "R3": self.legs["R3"].read_end_coordinate(),
             }
             return ends_coordinate 
         except Exception:

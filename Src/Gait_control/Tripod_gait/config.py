@@ -6,43 +6,43 @@ import numpy as np
 INITIAL_PHASES = [0, np.pi]  # φ1(0)=0.0 rad, φ2(0)=1.0 rad
 
 Z_LIFT   = 25    # 抬腿高度
-Z_DOWN   = 3   # 支撑下压
+Z_DOWN   = -3   # 支撑下压
 
 Y_STEP = 20
 
-X_STEP = 0
+X_STEP = 10
 
-initial_pos = [0, 95, -120]
+initial_pos = [0, 85, -135]
 # ——— 每条腿的轨迹端点及所属振荡器 ———
 LEG_CONFIG_Forward = {
     # osc = 0
-    'leg2_left':  {
+    'L2':  {
         'osc': 0,
         'P1' : [ initial_pos[0] + 2*Y_STEP, initial_pos[1], initial_pos[2] ],
         'P3' : [ initial_pos[0] - 2*Y_STEP, initial_pos[1], initial_pos[2] ]
     },
-    'leg3_right': {
+    'R3': {
         'osc': 0,
         'P1' : [ initial_pos[0] - Y_STEP, initial_pos[1] - Y_STEP*np.sqrt(3), initial_pos[2] ],
         'P3' : [ initial_pos[0] + Y_STEP, initial_pos[1] + Y_STEP*np.sqrt(3), initial_pos[2] ]
     },
-    'leg1_right': {
+    'R1': {
         'osc': 0,
         'P1' : [ initial_pos[0] - Y_STEP, initial_pos[1] + Y_STEP*np.sqrt(3), initial_pos[2] ],
         'P3' : [ initial_pos[0] + Y_STEP, initial_pos[1] - Y_STEP*np.sqrt(3), initial_pos[2] ]
     },
     # osc = 1
-    'leg2_right': {
+    'R2': {
         'osc': 1,
         'P1' : [ initial_pos[0] - 2*Y_STEP, initial_pos[1], initial_pos[2] ],
         'P3' : [ initial_pos[0] + 2*Y_STEP, initial_pos[1], initial_pos[2] ]
     },
-    'leg3_left':  {
+    'L3':  {
         'osc': 1,
         'P1' : [ initial_pos[0] + Y_STEP, initial_pos[1] - Y_STEP*np.sqrt(3), initial_pos[2] ],
         'P3' : [ initial_pos[0] - Y_STEP, initial_pos[1] + Y_STEP*np.sqrt(3), initial_pos[2] ]
     },
-    'leg1_left':  {
+    'L1':  {
         'osc': 1,
         'P1' : [ initial_pos[0] + Y_STEP, initial_pos[1] + Y_STEP*np.sqrt(3), initial_pos[2] ],
         'P3' : [ initial_pos[0] - Y_STEP, initial_pos[1] - Y_STEP*np.sqrt(3), initial_pos[2] ]
@@ -51,36 +51,36 @@ LEG_CONFIG_Forward = {
 
 LEG_CONFIG_Sidle = {
     # osc = 0
-    'leg2_left':  {
+    'L2':  {
         'osc': 0,
-        'P1' : [ initial_pos[0] - 2*X_STEP, initial_pos[1], initial_pos[2] ],
-        'P3' : [ initial_pos[0] + 2*X_STEP, initial_pos[1], initial_pos[2] ]
+        'P1' : [ initial_pos[0], initial_pos[1] - 2*X_STEP, initial_pos[2] ],
+        'P3' : [ initial_pos[0], initial_pos[1] + 2*X_STEP, initial_pos[2] ]
     },
-    'leg1_right': {
+    'R1': {
         'osc': 0,
-        'P1' : [ initial_pos[0] + X_STEP, initial_pos[1] - X_STEP*np.sqrt(3), initial_pos[2] ],
-        'P3' : [ initial_pos[0] - X_STEP, initial_pos[1] + X_STEP*np.sqrt(3), initial_pos[2] ]
+        'P1' : [ initial_pos[0] + X_STEP*np.sqrt(3), initial_pos[1] + X_STEP, initial_pos[2] ],
+        'P3' : [ initial_pos[0] - X_STEP*np.sqrt(3), initial_pos[1] - X_STEP, initial_pos[2] ]
     },
-    'leg3_right': {
+    'R3': {
         'osc': 0,
-        'P1' : [ initial_pos[0] + X_STEP, initial_pos[1] + X_STEP*np.sqrt(3), initial_pos[2] ],
-        'P3' : [ initial_pos[0] - X_STEP, initial_pos[1] - X_STEP*np.sqrt(3), initial_pos[2] ]
+        'P1' : [ initial_pos[0] - X_STEP*np.sqrt(3), initial_pos[1] + X_STEP, initial_pos[2] ],
+        'P3' : [ initial_pos[0] + X_STEP*np.sqrt(3), initial_pos[1] - X_STEP, initial_pos[2] ]
     },
     # osc = 1
-    'leg2_right': {
+    'R2': {
         'osc': 1,
-        'P1' : [ initial_pos[0] + 2*X_STEP, initial_pos[1], initial_pos[2] ],
-        'P3' : [ initial_pos[0] - 2*X_STEP, initial_pos[1], initial_pos[2] ]
+        'P1' : [ initial_pos[0], initial_pos[1] + 2*X_STEP, initial_pos[2] ],
+        'P3' : [ initial_pos[0], initial_pos[1] - 2*X_STEP, initial_pos[2] ]
     },
-    'leg1_left':  {
+    'L1':  {
         'osc': 1,
-        'P1' : [ initial_pos[0] - X_STEP, initial_pos[1] + X_STEP*np.sqrt(3), initial_pos[2] ],
-        'P3' : [ initial_pos[0] + X_STEP, initial_pos[1] - X_STEP*np.sqrt(3), initial_pos[2] ]
+        'P1' : [ initial_pos[0] + X_STEP*np.sqrt(3), initial_pos[1] - X_STEP, initial_pos[2] ],
+        'P3' : [ initial_pos[0] - X_STEP*np.sqrt(3), initial_pos[1] + X_STEP, initial_pos[2] ]
     },
-    'leg3_left':  {
+    'L3':  {
         'osc': 1,
-        'P1' : [ initial_pos[0] - X_STEP, initial_pos[1] - X_STEP*np.sqrt(3), initial_pos[2] ],
-        'P3' : [ initial_pos[0] + X_STEP, initial_pos[1] + X_STEP*np.sqrt(3), initial_pos[2] ]
+        'P1' : [ initial_pos[0] - X_STEP*np.sqrt(3), initial_pos[1] - X_STEP, initial_pos[2] ],
+        'P3' : [ initial_pos[0] + X_STEP*np.sqrt(3), initial_pos[1] + X_STEP, initial_pos[2] ]
     },
 }
 

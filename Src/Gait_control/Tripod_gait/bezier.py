@@ -46,37 +46,4 @@ def Bezier(p1, p3, theta, z_lift, z_down):
 
 
 
-if __name__ == "__main__":
-    # ——— 采样轨迹 ———
-    thetas = np.linspace(0, 2*np.pi, 200)
-    trajectory = np.array([Bezier(p1, p3, th, z_lift, z_down) for th in thetas])
 
-    # ——— 绘制 3D 轨迹 ———
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2], linewidth=2)
-    
-    # 标记起点
-    ax.scatter(*p1, s=50, marker='o', color='red')
-    ax.text(p1[0], p1[1], p1[2], 'p1 (start)', fontsize=10)
-    ax.text(p3[0], p3[1], p3[2], 'p3 (mid)', fontsize=10)
-    
-    # 对于ArcBezier，p3是角度参数，计算实际的终点位置
-    end_point = Bezier(p1, p3, 2*np.pi, z_lift, z_down)
-    ax.scatter(*end_point, s=50, marker='s', color='blue')
-    ax.text(end_point[0], end_point[1], end_point[2], f'end (p3={p3})', fontsize=10)
-    
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    ax.set_title('3D ArcBezier Trajectory')
-    plt.show()
-
-    # ——— 绘制 Z 随相位的变化 ———
-    plt.figure()
-    plt.plot(thetas, trajectory[:,2])
-    plt.xlabel('theta (rad)')
-    plt.ylabel('Z')
-    plt.title('Z component vs. theta')
-    plt.grid(True)
-    plt.show()

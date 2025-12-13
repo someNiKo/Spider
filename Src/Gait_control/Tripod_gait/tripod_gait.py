@@ -73,13 +73,12 @@ class TripodGait:
 
     @staticmethod
     def _to_robot_leg_key(config_key: str) -> str:
-        base, side = config_key.split('_', maxsplit=1)
-        index = ''.join(ch for ch in base if ch.isdigit())
-        if not index:
-            raise ValueError(f"Invalid leg key: {config_key}")
-        prefix = 'L' if 'left' in side else 'R'
-        return f"{prefix}{index}"
+        # Only accept new compact format 'L#' or 'R#'.
+        if not isinstance(config_key, str):
+            raise TypeError(f"leg key must be a string, got {type(config_key)!r}")
 
+        if len(config_key) >= 2 and config_key[0] in ("L", "R") and config_key[1:].isdigit():
+            return config_key
 
-# Backwards compatibility with previous lowercase class name.
-tripod_gait = TripodGait
+        raise ValueError(f"Invalid leg key format, expected 'L#' or 'R#': {config_key}")
+

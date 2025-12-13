@@ -16,13 +16,13 @@ import sys
 import time
 import math
 import argparse
-import zmq
-import json
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[2]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
+
+from Src.DDS.publisher import Publisher
 
 def discover_joints():
     try:
@@ -59,35 +59,38 @@ def main():
     else:
         joints = discover_joints()
 
-    ctx = zmq.Context()
-    pub = ctx.socket(zmq.PUB)
-    pub.bind(args.bind)
+    publisher = Publisher(
+        bind=args.bind,
+        topic="servo.angles",
+        publish_hz=args.send_hz,
+        warmup=0.0,
+        add_meta=True,
+    )
+    publisher.start()
 
-    print(f"PUB bound to {args.bind}, publishing to {len(joints)} joints")
-    # give subscribers time to connect
+    print(f"Publisher bound to {args.bind}, topic 'servo.angles', publishing to {len(joints)} joints")
     time.sleep(1.0)
 
     try:
         t = 0.0
         dt = 1.0 / float(args.send_hz)
-        seq = 0
         while True:
             snapshot = {}
             for name in joints:
                 snapshot[name] = float(args.base + args.amp * math.sin(2.0 * math.pi * args.freq * t))
 
-            payload = {"seq": seq, "t": t, "angles": snapshot}
-            # send JSON (subscriber will use recv_json)
-            pub.send_json(payload)
+            payload = {"angles": snapshot, "time": t}
+            publisher.publish_once(payload)
 
-            seq += 1
             t += dt
             time.sleep(dt)
     except KeyboardInterrupt:
         print("publisher stopped")
     finally:
-        pub.close()
-        ctx.term()
+        try:
+            publisher.stop()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     main()
