@@ -118,5 +118,7 @@ yarn-error.log*
 *.bak
 *.old
 
+.codex
+AGENTS.md
 # Local git ignore (user-specific local exclusions)
 # You can also use .git/info/exclude for machine-specific ignores.

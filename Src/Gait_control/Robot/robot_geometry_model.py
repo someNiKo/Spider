@@ -169,7 +169,7 @@ class Leg:
             "min_tibia": Min_tibia_servo_output[self.side],
         }
 
-        self.coxa_servo_output_offset = self.calculate_coxa_servo_output_offset()
+        self.tibia_servo_output_offset = self.calculate_tibia_servo_output_offset()
         self.calculate_servo_output_limitation()      
 
         self.__end_coordinate = self.forward_kinematic()
@@ -210,7 +210,6 @@ class Leg:
                 self.__servo_output[self.name + "_coxa"], self.__servo_output[self.name + "_femur"], self.__servo_output[self.name + "_tibia"] = self.servo_output_convert()
             except Exception as e:
                 print("e")
-                exit(1)
 
     def _write_joint_angle(self, name: str, angle: float):
         pass
@@ -287,7 +286,7 @@ class Leg:
 
         return coxa_servo_output, femur_servo_output, tibia_servo_output
 
-    def calculate_coxa_servo_output_offset(self) -> float:
+    def calculate_tibia_servo_output_offset(self) -> float:
         # unit degree
         Distance = np.hypot(self.Link_rocker_length, self.Link_ground_length)
         alpha = np.arccos(self.Link_ground_length / Distance)
@@ -301,25 +300,37 @@ class Leg:
         # tibia limitation
         with self._lock:
             if self.side == "left":
-                phi_0 = self.coxa_servo_output_offset       # degree
-                max_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_rocker_length + self.Link_coupler_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) + phi_0
-                min_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) + phi_0
-                self.__servo_output_limitation["max_coxa"] = min(self.__servo_output_limitation["max_coxa"], max_theta_s)
-                self.__servo_output_limitation["min_coxa"] = max(self.__servo_output_limitation["min_coxa"], min_theta_s)
+                phi_0 = self.tibia_servo_output_offset       # degree
+                if self.Link_ground_length + self.Link_crank_length < self.Link_rocker_length + self.Link_coupler_length:
+                    max_theta_s = 180.0
+                else:
+                    max_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_rocker_length + self.Link_coupler_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) + phi_0
+                if self.Link_ground_length + self.Link_rocker_length < self.Link_crank_length + self.Link_coupler_length:
+                    min_theta_s = 0.0
+                else:
+                    min_theta_s = np.rad2deg(np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) + phi_0
+                self.__servo_output_limitation["max_tibia"] = min(self.__servo_output_limitation["max_tibia"], max_theta_s)
+                self.__servo_output_limitation["min_tibia"] = max(self.__servo_output_limitation["min_tibia"], min_theta_s)
 
             elif self.side == "right":
-                phi_0 = self.coxa_servo_output_offset       # degree
-                max_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) - phi_0
-                min_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_coupler_length + self.Link_rocker_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) - phi_0
-                self.__servo_output_limitation["max_coxa"] = min(self.__servo_output_limitation["max_coxa"], max_theta_s)
-                self.__servo_output_limitation["min_coxa"] = max(self.__servo_output_limitation["min_coxa"], min_theta_s)
+                phi_0 = self.tibia_servo_output_offset       # degree
+                if self.Link_ground_length + self.Link_rocker_length < self.Link_crank_length + self.Link_coupler_length:
+                    max_theta_s = 180.0
+                else:
+                    max_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + (self.Link_crank_length + self.Link_coupler_length)**2 - self.Link_rocker_length**2) / (2 * self.Link_ground_length * (self.Link_crank_length + self.Link_coupler_length)))) - phi_0
+                if self.Link_ground_length + self.Link_crank_length < self.Link_rocker_length + self.Link_coupler_length:
+                    min_theta_s = 0.0
+                else:
+                    min_theta_s = np.rad2deg(np.pi - np.arccos((self.Link_ground_length**2 + self.Link_crank_length**2 - (self.Link_coupler_length + self.Link_rocker_length)**2) / (2 * self.Link_ground_length * self.Link_crank_length))) - phi_0
+                self.__servo_output_limitation["max_tibia"] = min(self.__servo_output_limitation["max_tibia"], max_theta_s)
+                self.__servo_output_limitation["min_tibia"] = max(self.__servo_output_limitation["min_tibia"], min_theta_s)
             else:
                 pass
 
     def link_kinematic(self) -> float:
         # input unit: degree
         # output unit: degree       
-        phi_0 = np.deg2rad(self.coxa_servo_output_offset)     # rad
+        phi_0 = np.deg2rad(self.tibia_servo_output_offset)     # rad
         if self.side == "left":
             theta_3l = np.deg2rad(self.read_joint_angle("femur") + self.read_joint_angle("tibia"))
             Distance = np.sqrt(self.Link_rocker_length**2 + self.Link_ground_length**2 - 2 * self.Link_rocker_length * self.Link_ground_length * np.cos(np.pi - theta_3l))
